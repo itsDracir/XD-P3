@@ -35,17 +35,6 @@ int main(int argc, char **argv)
 
         /* Execucio del protocol */
         /* 1) Demanem un número pel teclat */
-        char resposta; /* Per desar la resposta */
-        printf("Benvingut/da vols fer una reserva? (S/N) ");
-        scanf("%c", &resposta);
-        
-        sprintf(paquet, "%c\n", resposta);
-        sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_servidor, sizeof(contacte_servidor));
-                if(resposta == 'N'){
-            close(s);
-            return 0;
-        }
-
         int n;
         printf("Benvingut/da!\nPosa un número ");
         scanf("%d",&n);
@@ -56,21 +45,9 @@ int main(int argc, char **argv)
         /* L'enviem */
         sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_servidor, sizeof(contacte_servidor));
         printf("Paquet enviat! Espero resposta...\n");
-        FILE *file = fopen("RESULTAT", "w");
 
-        while (1)
-        {
-            recvfrom(s, paquet, MIDA_PAQUET, 0, NULL, NULL);
-            paquet[strcspn(paquet, "\n")] = '\0';  // Remove newline for "EOF" check
-
-            if (strcmp(paquet, "EOF") == 0)
-                break;
-
-            fprintf(file, "%s\n", paquet);
-        }
-        
-        printf("Fitxer rebut i guardat com %s\n", "RESULTAT");
-        fclose(file);
+        recvfrom(s, paquet, MIDA_PAQUET, 0, NULL, NULL); /* NULL -> No cal saber des d'on ens envien el paquet. */
+        printf("He rebut la resposta: %s\n", paquet);
 
         /* Tanquem el socket */
         close(s);

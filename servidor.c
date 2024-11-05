@@ -49,18 +49,9 @@ int main(int argc, char **argv)
             printf("Servidor operatiu al port %d!\n", atoi(argv[1]));
 
             int numero; /* Pel desar el número (protocol) */
-            char resposta; /* Per desar la resposta */
 
             while (1)
             {
-                recvfrom(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, &contacte_client_mida);                
-                sscanf(paquet, "%c", &resposta);
-                printf("Resposta del client: %c\n", resposta);
-
-                
-                if(resposta == 'N'){
-                    printf("Client ha cancel·lat la reserva\n");
-                }
                 printf("Esperant petició d'algun client...\n");
                 /* Quan es rep un paquet, a adr_client s'hi anota la IP i port des d'on s'envia */
                 recvfrom(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, &contacte_client_mida);
@@ -69,19 +60,13 @@ int main(int argc, char **argv)
                 /* Tractar la petició... */
                 sscanf(paquet, "%d", &numero);
 
-                printf("Volen que multipliqui %d per 2... Ho guardem en el fitxer FServer\n", numero);
-                FILE *f = fopen("FServer", "a");
-                fprintf(f, "Resultat: %d\n", numero * 2);
-                fclose(f);
-                printf("Càlcul realitzat i guardat en un fitxer!\n");
+                printf("Volen que multipliqui %d per 2...\n", numero);
+                sprintf(paquet, "%d\n", numero * 2);
+                printf("Càlcul realitzat!\n");
 
-                while (fgets(paquet, MIDA_PAQUET, f)){  
-                sendto(s, paquet, strlen(paquet), 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
-                }
-                fclose(f);
-                strcpy(paquet, "EOF");
-                sendto(s, paquet, strlen(paquet), 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
-                printf("Fitxer enviat!\n");
+                /* Enviem el paquet a l'adreça i port on està esperant el client */
+                sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
+                printf("Càlcul enviat!\n");
             }
         }
 
