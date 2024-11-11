@@ -57,17 +57,21 @@ int main(int argc, char **argv)
  
             const char delimiter[2] = ";";  // separador
             char *token;
-            int error = 0, encontrado = 0;
+            int encontrado = 0, errors = 0;
+            
+
+
+            char respostaError[100];
  
  
             while (1)
             {
                 printf("Esperant petició d'algun client...\n");
                 /* Quan es rep un paquet, a adr_client s'hi anota la IP i port des d'on s'envia */
-                recvfrom(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, &contacte_client_mida);
-                printf("Paquet rebut!\n");
+
                 //copia del paquet, strtok modifica.
                 recvfrom(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, &contacte_client_mida);
+                printf("Paquet rebut!\n");
                 char paquetcp[MIDA_PAQUET];
                 strcpy(paquetcp, paquet);
                 token = strtok(paquetcp, delimiter);
@@ -79,8 +83,10 @@ int main(int argc, char **argv)
                     printf("Numero: %s\n", token);
                     sscanf(token, "%d", &numero);
                     if (numero > 20 || numero < 0){
-                        error = 1;
-                        break;
+                        sprintf(respostaError + strlen(respostaError), "Error 1: Nomes pots reservar per a un maxim de 20 persones!\n");
+                        errors++;
+                        //sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
+                        //break;
                     }
                     token = strtok(NULL, delimiter);
                     printf("Dia: %s\n", token);
@@ -90,27 +96,39 @@ int main(int argc, char **argv)
                             encontrado = 1;
                     }}
                     if (encontrado != 1) {
-                        error = 2;
-                        break;
+                        sprintf(respostaError + strlen(respostaError), "Error 2: El dia que has triat no es valid\n");
+                        errors++;
+                        //break;
                     }
                     token = strtok(NULL, delimiter);
                     printf("Torn: %s\n", token);
                     sscanf(token, "%d", &torn);
+                    if(torn != 1 && torn != 2){
+                        sprintf(respostaError + strlen(respostaError), "Error 3: el torn no es valid\n");
+                        errors++;
+                        //break;
+                    }
                     token = strtok(NULL, delimiter);
  
                 }
-                printf("Error %d", error);
-                /* Tractar la petició... */
-                sscanf(paquetcp, "%d", &numero);
- 
- 
-                printf("Volen que multipliqui %d per 2...\n", numero);
-                sprintf(paquet, "%d\n", numero * 2);
-                printf("Càlcul realitzat!\n");
+
+                // si tenim errors, enviem quins son al client.
+                if (errors > 0){
+                printf("Errors trobats: %d\n", errors);
+                sendto(s, respostaError, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
+                }
+                else{
+                // si no tenim errors, enviem una confirmacio al client.
+                char confirmation[200];
+                snprintf(confirmation, sizeof(confirmation), "Reserva confirmada:\nNom: %s\nNumero de persones: %d\nDia: %s\nTorn: %d\n", nom, numero, dia, torn);
+                sendto(s, confirmation, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
+                printf("Reserva confirmada i enviada al client!\n");
+                }
+                
  
                 /* Enviem el paquet a l'adreça i port on està esperant el client */
                 sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_client, contacte_client_mida);
-                printf("Càlcul enviat!\n");
+                printf("Reserva feta!\n");
             }
         }
  

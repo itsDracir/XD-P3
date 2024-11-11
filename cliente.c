@@ -40,7 +40,6 @@ int main(int argc, char **argv)
         scanf("%c", &resposta);
         
         sprintf(paquet, "%c\n", resposta);
-        sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_servidor, sizeof(contacte_servidor));
                 if(resposta == 'N'){
                     printf ("Se ha cancelado la reserva");
                     close(s);
@@ -58,7 +57,7 @@ int main(int argc, char **argv)
         scanf ("%d", &n);
 
         /*Seleccio del dia de la setmana*/
-        printf ("Dia de la reserva: ");
+        printf ("Dia de la reserva(Dilluns, Dimarts, Dimecres, Dijous, Divendres, Dissabte, Diumenge): ");
         scanf ("%s", dia);
 
         /*Selecció de torn*/
@@ -73,21 +72,10 @@ int main(int argc, char **argv)
         /* L'enviem */
         sendto(s, paquet, MIDA_PAQUET, 0, (struct sockaddr *)&contacte_servidor, sizeof(contacte_servidor));
         printf("Paquet enviat! Espero resposta...\n");
-        FILE *file = fopen("RESULTAT", "w");
 
-        while (1)
-        {
-            recvfrom(s, paquet, MIDA_PAQUET, 0, NULL, NULL);
-            paquet[strcspn(paquet, "\n")] = '\0';  // Remove newline for "EOF" check
+        recvfrom(s, paquet, MIDA_PAQUET, 0, NULL, NULL);
+        printf("%s\n", paquet);
 
-            if (strcmp(paquet, "EOF") == 0)
-                break;
-
-            fprintf(file, "%s\n", paquet);
-        }
-        
-        printf("Fitxer rebut i guardat com %s\n", "RESULTAT");
-        fclose(file);
 
         /* Tanquem el socket */
         close(s);
